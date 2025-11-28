@@ -5,6 +5,7 @@ A modern, professional ride-booking platform with real-time tracking, separate d
 ![RapidRide Logo](frontend/rapidride_logo.png)
 
 ## 📋 Table of Contents
+- [✨ Getting Started](#-getting-started---download--run)
 - [Features](#features)
 - [Tech Stack](#tech-stack)
 - [Project Structure](#project-structure)
@@ -16,6 +17,28 @@ A modern, professional ride-booking platform with real-time tracking, separate d
 - [Deployment](#deployment)
 - [Contributing](#contributing)
 - [License](#license)
+
+---
+
+## ✨ Getting Started - Download & Run
+
+**👉 Want to run RapidRide on your computer?**
+
+### 📥 [Complete Download & Setup Guide](DOWNLOAD_AND_SETUP.md)
+**Perfect for beginners!** Step-by-step instructions to:
+- Download the project (with or without Git)
+- Install dependencies
+- Configure the database
+- Run the application
+- Create your first account
+
+### 🌐 [Deployment Guide](DEPLOYMENT_GUIDE.md)
+**Ready for production?** Deploy to:
+- Render (Free & Easy)
+- Heroku
+- Railway
+- DigitalOcean
+- With MongoDB Atlas (Cloud Database)
 
 ---
 
@@ -145,6 +168,10 @@ RAPIDRIDE/
 
 ## 🚀 Quick Start
 
+> **📥 New User? Start Here!**  
+> **Complete Download & Setup Guide:** [`DOWNLOAD_AND_SETUP.md`](DOWNLOAD_AND_SETUP.md)  
+> This step-by-step guide shows you exactly how to download and run RapidRide on your computer!
+
 ### Prerequisites
 - Node.js (v16 or higher)
 - MongoDB (v5.0 or higher)
@@ -209,9 +236,19 @@ Create test accounts via signup or use these default credentials:
 
 ## 📚 Documentation
 
-### Detailed Guides
-- **[API Documentation](backend/API_DOCUMENTATION.md)** - Complete API reference with examples
-- **[Backend Setup Guide](backend/SETUP_GUIDE.md)** - Detailed backend configuration and deployment
+### 🎯 For New Users
+- **[📥 Download & Setup Guide](DOWNLOAD_AND_SETUP.md)** - Complete beginner-friendly setup instructions
+- **[🚀 Quick Start for GitHub](QUICK_START_GITHUB.md)** - Fast setup for developers
+- **[🌐 Deployment Guide](DEPLOYMENT_GUIDE.md)** - Deploy to production (Render, Heroku, Railway)
+
+### 🔧 For Developers
+- **[📡 API Documentation](backend/API_DOCUMENTATION.md)** - Complete API reference with examples
+- **[⚙️ Backend Setup Guide](backend/SETUP_GUIDE.md)** - Detailed backend configuration
+- **[✅ Implementation Checklist](backend/IMPLEMENTATION_CHECKLIST.md)** - Development progress tracker
+
+### 🤝 For Contributors
+- **[🤝 Contributing Guide](CONTRIBUTING.md)** - How to contribute to RapidRide
+- **[📤 GitHub Push Guide](GITHUB_PUSH_GUIDE.md)** - Git workflow for team members
 
 ### Quick Links
 - [Authentication](#authentication)
