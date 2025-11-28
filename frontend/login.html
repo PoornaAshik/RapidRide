@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+  <!-- Tailwind -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      corePlugins: { preflight: false },
+      theme: {
+        extend: {
+          colors: {
+            dark1: "#2E4053",
+            grey1: "#BFC9CA",
+            grey2: "#AAB7B8",
+            grey3: "#D5D8DC",
+          }
+        }
+      }
+    }
+  </script>
+
+  <link rel="stylesheet" href="login.css?v=50">
+
+</head>
+
+<body>
+
+  <div class="container-main">
+
+    <div class="logo-line">
+  <img src="rapidride_logo.png" class="app-logo" alt="RapidRide Logo">
+
+  <div class="title-text">
+    <h1>RAPIDRIDE</h1>
+    <p>Login to continue</p>
+  </div>
+</div>
+
+
+    <div class="modern-box">
+
+      <div class="form-group">
+        <label>Email</label>
+        <input id="email" type="email" placeholder="Enter your email">
+      </div>
+
+      <div class="form-group">
+        <label>Password</label>
+        <input id="password" type="password" placeholder="Enter your password">
+      </div>
+
+      <div class="form-group">
+        <label>Role</label>
+        <select id="role">
+          <option value="rider">Rider</option>
+          <option value="driver">Driver</option>
+          <option value="admin">Admin</option>
+        </select>
+      </div>
+
+      <button class="btn-primary" onclick="login()">Login</button>
+
+      <div class="form-footer">
+        <p>Don't have an account? <a href="signup.html">Signup</a></p>
+      </div>
+
+    </div>
+
+  </div>
+
+  <script src="login.js"></script>
+
+</body>
+</html>

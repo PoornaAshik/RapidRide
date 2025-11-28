@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RapidRide - Driver Dashboard</title>
+  <link rel="stylesheet" href="../assets/css/dashboard.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Leaflet (OpenStreetMap) - free map -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <!-- Fallback if Leaflet fails to load -->
+  <script>
+    (function(){
+      function loaded(){ return typeof L !== 'undefined'; }
+      if (!loaded()) {
+        var s = document.createElement('script');
+        s.src = 'https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js';
+        s.onload = function(){ console.log('Leaflet fallback loaded from jsdelivr'); };
+        document.head.appendChild(s);
+      }
+    })();
+  </script>
+</head>
+<body>
+  <!-- 1. NAVBAR -->
+  <nav class="navbar">
+    <div class="nav-container">
+      <div class="nav-left">
+        <div class="logo-nav">
+          <span class="logo-icon">🚗</span>
+          <span class="logo-text">RapidRide Driver</span>
+        </div>
+      </div>
+      <div class="nav-right">
+        <!-- Online/Offline Status Indicator -->
+        <div class="status-indicator" id="statusIndicator">
+          <span class="status-dot offline"></span>
+          <span class="status-text">Offline</span>
+        </div>
+        
+        <button class="nav-icon-btn" id="notificationBtn">
+          <span class="notification-badge">2</span>
+          🔔
+        </button>
+        <div class="profile-dropdown">
+          <button class="profile-btn" id="profileBtn">
+            <div class="profile-avatar">RS</div>
+            <span class="profile-name">Rajesh Sharma</span>
+            <span class="dropdown-arrow">▼</span>
+          </button>
+          <div class="dropdown-menu" id="profileMenu">
+            <a href="#" class="dropdown-item" id="viewProfileBtn">
+              <span>👤</span> View Profile
+            </a>
+            <a href="#" class="dropdown-item" id="settingsBtn">
+              <span>⚙️</span> Settings
+            </a>
+            <a href="#" class="dropdown-item" id="earningsBtn">
+              <span>💰</span> Earnings
+            </a>
+            <a href="#" class="dropdown-item logout" id="logoutBtn">
+              <span>🚪</span> Logout
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- MAIN DASHBOARD -->
+  <div class="dashboard-wrapper">
+    
+    <!-- LEFT SIDEBAR -->
+    <aside class="sidebar-left" id="sidebarLeft">
+      
+      <!-- ONLINE/OFFLINE TOGGLE -->
+      <div class="card online-toggle-card">
+        <h3 class="card-title">Status</h3>
+        <div class="toggle-container">
+          <button class="toggle-btn" id="toggleOnlineBtn">
+            <span class="toggle-icon">🔴</span>
+            <span class="toggle-label">Go Online</span>
+          </button>
+          <p class="toggle-hint">Turn on to start accepting rides</p>
+        </div>
+      </div>
+
+      <!-- EARNINGS SUMMARY -->
+      <div class="card earnings-summary-card">
+        <h3 class="card-title">Today's Earnings</h3>
+        <div class="earnings-display">
+          <div class="earnings-amount">₹850</div>
+          <div class="earnings-meta">
+            <span class="earnings-rides">12 rides</span>
+            <span class="earnings-hours">6.5 hrs</span>
+          </div>
+        </div>
+        <div class="earnings-breakdown">
+          <div class="breakdown-item">
+            <span class="breakdown-label">Base Fare</span>
+            <span class="breakdown-value">₹720</span>
+          </div>
+          <div class="breakdown-item">
+            <span class="breakdown-label">Tips</span>
+            <span class="breakdown-value">₹80</span>
+          </div>
+          <div class="breakdown-item">
+            <span class="breakdown-label">Bonus</span>
+            <span class="breakdown-value">₹50</span>
+          </div>
+        </div>
+        <button class="btn-secondary">💰 View Detailed Earnings</button>
+      </div>
+
+      <!-- UPCOMING RIDES -->
+      <div class="card upcoming-rides-card">
+        <h3 class="card-title">Upcoming Scheduled Rides</h3>
+        <div class="upcoming-list" id="upcomingList">
+          <div class="upcoming-item">
+            <div class="upcoming-time">
+              <span class="time-hour">3:30 PM</span>
+              <span class="time-date">Today</span>
+            </div>
+            <div class="upcoming-details">
+              <p class="upcoming-route">Koramangala → Airport</p>
+              <p class="upcoming-rider">Priya M. • ⭐ 4.9</p>
+            </div>
+          </div>
+          <p class="no-upcoming" style="display: none;">No upcoming rides</p>
+        </div>
+      </div>
+
+      <!-- QUICK STATS -->
+      <div class="card quick-stats-card">
+        <h3 class="card-title">Quick Stats</h3>
+        <div class="stat-grid">
+          <div class="stat-item">
+            <div class="stat-icon">⭐</div>
+            <div class="stat-value">4.87</div>
+            <div class="stat-label">Rating</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-icon">✅</div>
+            <div class="stat-value">98%</div>
+            <div class="stat-label">Acceptance</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-icon">🎯</div>
+            <div class="stat-value">342</div>
+            <div class="stat-label">Total Rides</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-icon">🏆</div>
+            <div class="stat-value">24</div>
+            <div class="stat-label">Streak Days</div>
+          </div>
+        </div>
+      </div>
+
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="main-content">
+      
+      <!-- RIDE STATUS BAR -->
+      <div class="status-bar driver-status-bar" id="statusBar">
+        <div class="status-step active">
+          <div class="status-icon">🟢</div>
+          <span class="status-label">Available</span>
+        </div>
+        <div class="status-line"></div>
+        <div class="status-step">
+          <div class="status-icon">✅</div>
+          <span class="status-label">Assigned</span>
+        </div>
+        <div class="status-line"></div>
+        <div class="status-step">
+          <div class="status-icon">🚗</div>
+          <span class="status-label">En Route</span>
+        </div>
+        <div class="status-line"></div>
+        <div class="status-step">
+          <div class="status-icon">📍</div>
+          <span class="status-label">Arrived</span>
+        </div>
+        <div class="status-line"></div>
+        <div class="status-step">
+          <div class="status-icon">🛣️</div>
+          <span class="status-label">On Trip</span>
+        </div>
+        <div class="status-line"></div>
+        <div class="status-step">
+          <div class="status-icon">🏁</div>
+          <span class="status-label">Completed</span>
+        </div>
+      </div>
+
+      <!-- LIVE MAP SECTION -->
+      <div class="card map-card">
+        <div class="map-header">
+          <h3 class="card-title">Live Location</h3>
+          <button class="btn-map-action" id="centerMapBtn">📍 Center</button>
+        </div>
+        <div id="mapContainer" class="map-container" style="height:400px;width:100%;"></div>
+      </div>
+
+      <!-- CURRENT RIDE CARD -->
+      <div class="card current-ride-card driver-ride-card" id="currentRideCard" style="display: none;">
+        <h3 class="card-title">Current Ride</h3>
+        <div class="ride-details driver-ride-details">
+          <div class="rider-info">
+            <div class="rider-avatar">PM</div>
+            <div class="rider-text">
+              <p class="rider-name">Priya Mehta</p>
+              <p class="rider-rating">⭐ 4.9 • Premium Member</p>
+            </div>
+          </div>
+          
+          <div class="ride-route">
+            <div class="route-item">
+              <span class="route-icon pickup">📍</span>
+              <div class="route-details">
+                <p class="route-label">Pickup</p>
+                <p class="route-address">Koramangala 5th Block, Bangalore</p>
+              </div>
+            </div>
+            <div class="route-item">
+              <span class="route-icon drop">🎯</span>
+              <div class="route-details">
+                <p class="route-label">Drop-off</p>
+                <p class="route-address">Kempegowda International Airport</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="ride-meta">
+            <div class="meta-item">
+              <span class="meta-label">Distance</span>
+              <span class="meta-value">28.5 km</span>
+            </div>
+            <div class="meta-item">
+              <span class="meta-label">Fare</span>
+              <span class="meta-value">₹450</span>
+            </div>
+            <div class="meta-item">
+              <span class="meta-label">ETA</span>
+              <span class="meta-value" id="rideETA">35 mins</span>
+            </div>
+          </div>
+
+          <div class="ride-actions">
+            <button class="btn-primary" id="contactRiderBtn">📞 Contact Rider</button>
+            <button class="btn-primary" id="navigationBtn">🧭 Navigate</button>
+            <button class="btn-secondary" id="arrivedBtn" style="display: none;">✅ Mark Arrived</button>
+            <button class="btn-primary" id="startTripBtn" style="display: none;">▶️ Start Trip</button>
+            <button class="btn-success" id="completeTripBtn" style="display: none;">🏁 Complete Trip</button>
+            <button class="btn-cancel" id="cancelRideBtn">❌ Cancel Ride</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- EARNINGS ANALYTICS GRAPH -->
+      <div class="card analytics-card">
+        <h3 class="card-title">Weekly Earnings</h3>
+        <div class="chart-container" style="height:240px; padding:16px;">
+          <canvas id="earningsChart"></canvas>
+        </div>
+      </div>
+
+      <!-- RIDE HISTORY -->
+      <div class="card history-card">
+        <h3 class="card-title">Recent Rides</h3>
+        <div class="history-list" id="historyList">
+          <div class="history-item">
+            <div class="history-icon">🚕</div>
+            <div class="history-details">
+              <p class="history-route">MG Road → Indiranagar</p>
+              <p class="history-meta">Nov 27 • 12.5 km • ₹180 • Amit K.</p>
+            </div>
+            <div class="history-rating">⭐ 5.0</div>
+            <button class="btn-invoice">📄</button>
+          </div>
+          <div class="history-item">
+            <div class="history-icon">🚕</div>
+            <div class="history-details">
+              <p class="history-route">Whitefield → Koramangala</p>
+              <p class="history-meta">Nov 27 • 18.3 km • ₹280 • Sneha R.</p>
+            </div>
+            <div class="history-rating">⭐ 4.8</div>
+            <button class="btn-invoice">📄</button>
+          </div>
+          <div class="history-item">
+            <div class="history-icon">🚕</div>
+            <div class="history-details">
+              <p class="history-route">HSR Layout → Banashankari</p>
+              <p class="history-meta">Nov 26 • 14.2 km • ₹220 • Rohan M.</p>
+            </div>
+            <div class="history-rating">⭐ 5.0</div>
+            <button class="btn-invoice">📄</button>
+          </div>
+        </div>
+        <button class="btn-secondary">📊 View All Rides</button>
+      </div>
+
+    </main>
+
+    <!-- RIGHT SIDEBAR -->
+    <aside class="sidebar-right" id="sidebarRight">
+      
+      <!-- PROFILE INFO -->
+      <div class="card profile-card driver-profile-card">
+        <h3 class="card-title">Driver Profile</h3>
+        <div class="profile-info">
+          <div class="profile-avatar-large">RS</div>
+          <p class="profile-name-large">Rajesh Sharma</p>
+          <p class="profile-phone">+91 98765 43210</p>
+          <div class="profile-rating-display">
+            <span class="rating-stars">⭐⭐⭐⭐⭐</span>
+            <span class="rating-value">4.87 (342 rides)</span>
+          </div>
+        </div>
+        <div class="vehicle-info">
+          <h4 class="vehicle-title">Vehicle Details</h4>
+          <div class="vehicle-details">
+            <p><strong>Car:</strong> Toyota Innova</p>
+            <p><strong>Model:</strong> 2021</p>
+            <p><strong>Plate:</strong> KA 01 AB 1234</p>
+            <p><strong>Color:</strong> White</p>
+          </div>
+        </div>
+        <button class="btn-secondary" id="editProfileBtn">✏️ Edit Profile</button>
+      </div>
+
+      <!-- INCENTIVES & BONUSES -->
+      <div class="card incentives-card">
+        <h3 class="card-title">Incentives & Bonuses</h3>
+        <div class="incentive-list">
+          <div class="incentive-item active">
+            <div class="incentive-icon">🎯</div>
+            <div class="incentive-info">
+              <p class="incentive-name">Complete 15 rides</p>
+              <p class="incentive-progress">12/15 • ₹200 bonus</p>
+              <div class="progress-bar">
+                <div class="progress-fill" style="width: 80%;"></div>
+              </div>
+            </div>
+          </div>
+          <div class="incentive-item">
+            <div class="incentive-icon">⚡</div>
+            <div class="incentive-info">
+              <p class="incentive-name">Peak hour bonus</p>
+              <p class="incentive-progress">6-9 PM • +₹50/ride</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SUPPORT / HELP -->
+      <div class="card support-card">
+        <h3 class="card-title">Need Help?</h3>
+        <button class="btn-secondary" id="contactSupportBtn">💬 Contact Support</button>
+        <button class="btn-secondary" id="reportIssueBtn">⚠️ Report Issue</button>
+        <a href="#" class="link-text">❓ View Driver FAQ</a>
+      </div>
+
+    </aside>
+
+  </div>
+
+  <!-- NOTIFICATIONS PANEL (Slide-out) -->
+  <div class="notification-panel" id="notificationPanel">
+    <div class="panel-header">
+      <h3>Notifications</h3>
+      <button class="close-btn" id="closeNotificationBtn">✕</button>
+    </div>
+    <div class="notification-list">
+      <div class="notification-item unread">
+        <span class="notif-icon">🎉</span>
+        <div class="notif-content">
+          <p class="notif-title">Bonus Achieved!</p>
+          <p class="notif-text">You earned ₹200 bonus for completing 15 rides today</p>
+          <span class="notif-time">10 mins ago</span>
+        </div>
+      </div>
+      <div class="notification-item">
+        <span class="notif-icon">⭐</span>
+        <div class="notif-content">
+          <p class="notif-title">New Rating</p>
+          <p class="notif-text">Priya M. rated you 5 stars!</p>
+          <span class="notif-time">1 hour ago</span>
+        </div>
+      </div>
+      <div class="notification-item">
+        <span class="notif-icon">💰</span>
+        <div class="notif-content">
+          <p class="notif-title">Earnings Updated</p>
+          <p class="notif-text">Weekly earnings: ₹5,450</p>
+          <span class="notif-time">3 hours ago</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SOS EMERGENCY BUTTON -->
+  <button class="sos-button driver-sos-button" id="sosButton">
+    <span class="sos-icon">🆘</span>
+  </button>
+
+  <!-- SOS CONFIRMATION MODAL -->
+  <div class="modal" id="sosModal">
+    <div class="modal-content emergency-modal">
+      <h3>🆘 Emergency SOS</h3>
+      <p>Are you sure you want to trigger an emergency alert?</p>
+      <p class="modal-subtext">This will notify emergency contacts and authorities.</p>
+      <div class="modal-actions">
+        <button class="btn-danger" id="confirmSosBtn">Confirm SOS</button>
+        <button class="btn-secondary" id="cancelSosBtn">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SUPPORT MODAL -->
+  <div class="modal" id="supportModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Contact Support</h3>
+        <button class="close-btn" id="closeSupportModalBtn">✕</button>
+      </div>
+      <form id="supportForm">
+        <div class="form-group">
+          <label>Issue Type</label>
+          <select class="input-field">
+            <option>Payment Issue</option>
+            <option>Rider Complaint</option>
+            <option>App Problem</option>
+            <option>Vehicle Problem</option>
+            <option>Other</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Description</label>
+          <textarea class="input-field" rows="4" placeholder="Describe your issue..."></textarea>
+        </div>
+        <button type="submit" class="btn-primary">Submit</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- RIDER INFO MODAL (When ride assigned) -->
+  <div class="modal" id="riderInfoModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>🚗 New Ride Request</h3>
+        <button class="close-btn" id="closeRiderInfoBtn">✕</button>
+      </div>
+      <div class="rider-request-info">
+        <div class="rider-avatar-large">PM</div>
+        <h4>Priya Mehta</h4>
+        <p class="rider-rating-large">⭐ 4.9 • 156 rides</p>
+        
+        <div class="request-details">
+          <div class="request-item">
+            <span class="request-icon">📍</span>
+            <div>
+              <p class="request-label">Pickup</p>
+              <p class="request-value">Koramangala 5th Block</p>
+            </div>
+          </div>
+          <div class="request-item">
+            <span class="request-icon">🎯</span>
+            <div>
+              <p class="request-label">Drop</p>
+              <p class="request-value">Airport Terminal 1</p>
+            </div>
+          </div>
+          <div class="request-item">
+            <span class="request-icon">💰</span>
+            <div>
+              <p class="request-label">Estimated Fare</p>
+              <p class="request-value">₹450</p>
+            </div>
+          </div>
+          <div class="request-item">
+            <span class="request-icon">📏</span>
+            <div>
+              <p class="request-label">Distance</p>
+              <p class="request-value">28.5 km</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="request-timer">
+          <p>Accept in: <span id="requestTimer">15</span>s</p>
+        </div>
+
+        <div class="modal-actions">
+          <button class="btn-success btn-large" id="acceptRideBtn">✅ Accept Ride</button>
+          <button class="btn-cancel" id="rejectRideBtn">❌ Reject</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+  <script type="module" src="../assets/js/dashboard.js"></script>
+  <script>
+    // Initialize earnings chart
+    document.addEventListener('DOMContentLoaded', function () {
+      const canvas = document.getElementById('earningsChart');
+      if (!canvas) return;
+
+      const labels = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+      const data = {
+        labels: labels,
+        datasets: [{
+          label: 'Daily Earnings (₹)',
+          data: [620, 890, 750, 980, 1120, 850, 450],
+          fill: true,
+          backgroundColor: 'rgba(46, 204, 113, 0.12)',
+          borderColor: 'rgba(46, 204, 113, 1)',
+          tension: 0.3,
+          pointRadius: 5,
+          pointBackgroundColor: 'rgba(46, 204, 113, 1)'
+        }]
+      };
+
+      new Chart(canvas, {
+        type: 'line',
+        data: data,
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: true },
+            tooltip: { 
+              mode: 'index', 
+              intersect: false,
+              callbacks: {
+                label: function(context) {
+                  return context.dataset.label + ': ₹' + context.parsed.y;
+                }
+              }
+            }
+          },
+          scales: {
+            x: { display: true },
+            y: { 
+              beginAtZero: true,
+              ticks: {
+                callback: function(value) {
+                  return '₹' + value;
+                }
+              }
+            }
+          }
+        }
+      });
+    });
+  </script>
+
+  <!-- Socket.IO Client -->
+  <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+  
+  <!-- Driver API Client -->
+  <script src="../assets/js/api.js"></script>
+  
+  <!-- Driver Socket Client -->
+  <script src="../assets/js/socket.js"></script>
+  
+  <!-- Driver Dashboard Controller -->
+  <script src="../assets/js/dashboard.js"></script>
+</body>
+</html>

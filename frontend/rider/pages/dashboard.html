@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RapidRide - Rider Dashboard</title>
+  <link rel="stylesheet" href="../assets/css/dashboard.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Leaflet (OpenStreetMap) - free map -->
+  <!-- Load Leaflet from CDN (removed integrity attribute because SRI mismatch blocked loading locally) -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <!-- Fallback if Leaflet fails to load (attempt to load from jsdelivr) -->
+  <script>
+    (function(){
+      function loaded(){ return typeof L !== 'undefined'; }
+      if (!loaded()) {
+        var s = document.createElement('script');
+        s.src = 'https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js';
+        s.onload = function(){ console.log('Leaflet fallback loaded from jsdelivr'); };
+        document.head.appendChild(s);
+      }
+    })();
+  </script>
+</head>
+<body>
+  <!-- 1. NAVBAR -->
+  <nav class="navbar">
+    <div class="nav-container">
+      <div class="nav-left">
+        <div class="logo-nav">
+          <span class="logo-icon">🚗</span>
+          <span class="logo-text">RapidRide</span>
+        </div>
+      </div>
+      <div class="nav-right">
+        <button class="nav-icon-btn" id="notificationBtn">
+          <span class="notification-badge">3</span>
+          🔔
+        </button>
+        <div class="profile-dropdown">
+          <button class="profile-btn" id="profileBtn">
+            <div class="profile-avatar">JD</div>
+            <span class="profile-name">John Doe</span>
+            <span class="dropdown-arrow">▼</span>
+          </button>
+          <div class="dropdown-menu" id="profileMenu">
+            <a href="#" class="dropdown-item" id="viewProfileBtn">
+              <span>👤</span> View Profile
+            </a>
+            <a href="#" class="dropdown-item" id="settingsBtn">
+              <span>⚙️</span> Settings
+            </a>
+            <a href="#" class="dropdown-item logout" id="logoutBtn">
+              <span>🚪</span> Logout
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- MAIN DASHBOARD -->
+  <div class="dashboard-wrapper">
+    
+    <!-- LEFT SIDEBAR -->
+    <aside class="sidebar-left" id="sidebarLeft">
+      
+      <!-- 4. RIDE REQUEST FORM -->
+      <div class="card ride-request-card">
+        <h3 class="card-title">Request a Ride</h3>
+        <form id="rideRequestForm">
+          <div class="form-group">
+            <label>Pickup Location</label>
+            <input type="text" id="pickupInput" placeholder="Enter pickup location" class="input-field">
+          </div>
+          <div class="form-group">
+            <label>Drop Location</label>
+            <input type="text" id="dropInput" placeholder="Enter destination" class="input-field">
+          </div>
+          <div class="form-group">
+            <label>Ride Type</label>
+            <select id="rideTypeSelect" class="input-field">
+              <option value="economy">Economy</option>
+              <option value="comfort">Comfort</option>
+              <option value="premium">Premium</option>
+              <option value="shared">Shared</option>
+            </select>
+          </div>
+          <div class="fare-estimate">
+            <span class="fare-label">Estimated Fare:</span>
+            <span class="fare-amount" id="fareAmount">₹120 - ₹150</span>
+          </div>
+          <button type="submit" class="btn-primary">
+            🚕 Request Ride
+          </button>
+        </form>
+      </div>
+
+      <!-- 10. REWARDS PANEL -->
+      <div class="card rewards-card">
+        <h3 class="card-title">Rewards & Coupons</h3>
+        <div class="reward-points">
+          <span class="points-icon">⭐</span>
+          <div class="points-info">
+            <span class="points-value">850</span>
+            <span class="points-label">Points</span>
+          </div>
+        </div>
+        <div class="coupon-section">
+          <input type="text" id="couponInput" placeholder="Enter coupon code" class="input-field">
+          <button class="btn-secondary">Apply</button>
+        </div>
+      </div>
+
+      <!-- 9. PRE-BOOKINGS -->
+      <div class="card prebookings-card">
+        <h3 class="card-title">Scheduled Rides</h3>
+        <div class="prebooking-list" id="prebookingList">
+          <div class="prebooking-item">
+            <div class="prebooking-date">
+              <span class="date-day">28</span>
+              <span class="date-month">Nov</span>
+            </div>
+            <div class="prebooking-details">
+              <p class="prebooking-route">Airport → Home</p>
+              <p class="prebooking-time">10:00 AM</p>
+            </div>
+          </div>
+        </div>
+        <button class="btn-secondary">📅 Schedule Ride</button>
+      </div>
+
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="main-content">
+      
+      <!-- 5. REAL-TIME STATUS BAR -->
+      <div class="status-bar" id="statusBar">
+        <div class="status-step active">
+          <div class="status-icon">🔍</div>
+          <span class="status-label">Searching</span>
+        </div>
+        <div class="status-line"></div>
+        <div class="status-step">
+          <div class="status-icon">✅</div>
+          <span class="status-label">Assigned</span>
+        </div>
+        <div class="status-line"></div>
+        <div class="status-step">
+          <div class="status-icon">🚗</div>
+          <span class="status-label">Arriving</span>
+        </div>
+        <div class="status-line"></div>
+        <div class="status-step">
+          <div class="status-icon">🛣️</div>
+          <span class="status-label">On Trip</span>
+        </div>
+        <div class="status-line"></div>
+        <div class="status-step">
+          <div class="status-icon">🏁</div>
+          <span class="status-label">Completed</span>
+        </div>
+      </div>
+
+      <!-- 2. LIVE MAP SECTION -->
+      <div class="card map-card">
+        <div id="mapContainer" class="map-container" style="height:360px;width:100%;"></div>
+      </div>
+
+      <!-- 3. CURRENT RIDE CARD -->
+      <div class="card current-ride-card" id="currentRideCard" style="display: none;">
+        <h3 class="card-title">Current Ride</h3>
+        <div class="ride-details">
+          <div class="driver-info">
+            <div class="driver-avatar">RS</div>
+            <div class="driver-text">
+              <p class="driver-name">Rajesh Sharma</p>
+              <p class="driver-rating">⭐ 4.8 • Toyota Innova</p>
+            </div>
+          </div>
+          <div class="ride-status">
+            <span class="status-badge arriving" id="rideStatus">Driver Arriving</span>
+            <p class="eta-text">ETA: <span id="etaCountdown">5 mins</span></p>
+          </div>
+          <button class="btn-cancel" id="cancelRideBtn">Cancel Ride</button>
+        </div>
+      </div>
+
+      <!-- 12. ANALYTICS SUMMARY (replaced by graph) -->
+      <div class="card analytics-card">
+        <h3 class="card-title">Analytics</h3>
+        <div class="chart-container" style="height:220px; padding:16px;">
+          <canvas id="analyticsChart"></canvas>
+        </div>
+      </div>
+
+      <!-- 11. RIDE HISTORY -->
+      <div class="card history-card">
+        <h3 class="card-title">Recent Rides</h3>
+        <div class="history-list" id="historyList">
+          <div class="history-item">
+            <div class="history-icon">🚕</div>
+            <div class="history-details">
+              <p class="history-route">MG Road → Indiranagar</p>
+              <p class="history-meta">Nov 25 • 12.5 km • ₹180</p>
+            </div>
+            <button class="btn-invoice">📄</button>
+          </div>
+          <div class="history-item">
+            <div class="history-icon">🚕</div>
+            <div class="history-details">
+              <p class="history-route">Airport → Koramangala</p>
+              <p class="history-meta">Nov 24 • 28.3 km • ₹450</p>
+            </div>
+            <button class="btn-invoice">📄</button>
+          </div>
+          <div class="history-item">
+            <div class="history-icon">🚕</div>
+            <div class="history-details">
+              <p class="history-route">Home → Office</p>
+              <p class="history-meta">Nov 23 • 8.2 km • ₹120</p>
+            </div>
+            <button class="btn-invoice">📄</button>
+          </div>
+        </div>
+      </div>
+
+    </main>
+
+    <!-- RIGHT SIDEBAR -->
+    <aside class="sidebar-right" id="sidebarRight">
+      
+      <!-- 13. SUPPORT / HELP -->
+      <div class="card support-card">
+        <h3 class="card-title">Need Help?</h3>
+        <button class="btn-secondary" id="contactSupportBtn">💬 Contact Support</button>
+        <button class="btn-secondary" id="reportIssueBtn">⚠️ Report Issue</button>
+        <a href="#" class="link-text">❓ View FAQ</a>
+      </div>
+
+      <!-- 14. PROFILE INFO -->
+      <div class="card profile-card">
+        <h3 class="card-title">Profile</h3>
+        <div class="profile-info">
+          <div class="profile-avatar-large">JD</div>
+          <p class="profile-name-large">John Doe</p>
+          <p class="profile-phone">+91 98765 43210</p>
+          <button class="btn-secondary" id="editProfileBtn">✏️ Edit Profile</button>
+        </div>
+      </div>
+
+    </aside>
+
+  </div>
+
+  <!-- 6. NOTIFICATIONS PANEL (Slide-out) -->
+  <div class="notification-panel" id="notificationPanel">
+    <div class="panel-header">
+      <h3>Notifications</h3>
+      <button class="close-btn" id="closeNotificationBtn">✕</button>
+    </div>
+    <div class="notification-list">
+      <div class="notification-item unread">
+        <span class="notif-icon">🎉</span>
+        <div class="notif-content">
+          <p class="notif-title">New Coupon Available!</p>
+          <p class="notif-text">Get 20% off on your next ride</p>
+          <span class="notif-time">2 mins ago</span>
+        </div>
+      </div>
+      <div class="notification-item">
+        <span class="notif-icon">🚗</span>
+        <div class="notif-content">
+          <p class="notif-title">Ride Completed</p>
+          <p class="notif-text">Your ride to Indiranagar was completed</p>
+          <span class="notif-time">1 hour ago</span>
+        </div>
+      </div>
+      <div class="notification-item">
+        <span class="notif-icon">⭐</span>
+        <div class="notif-content">
+          <p class="notif-title">Points Earned</p>
+          <p class="notif-text">You earned 50 reward points</p>
+          <span class="notif-time">3 hours ago</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 7. EMERGENCY SOS BUTTON -->
+  <button class="sos-button" id="sosButton">
+    <span class="sos-icon">🆘</span>
+  </button>
+
+  <!-- 8. ROUTE DEVIATION ALERT MODAL -->
+  <div class="modal" id="deviationModal">
+    <div class="modal-content warning-modal">
+      <h3>⚠️ Route Deviation Detected</h3>
+      <p>Your driver has deviated from the planned route.</p>
+      <div class="modal-actions">
+        <button class="btn-primary" id="contactDriverBtn">Contact Driver</button>
+        <button class="btn-secondary" id="closeDeviationBtn">Dismiss</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SOS CONFIRMATION MODAL -->
+  <div class="modal" id="sosModal">
+    <div class="modal-content emergency-modal">
+      <h3>🆘 Emergency SOS</h3>
+      <p>Are you sure you want to trigger an emergency alert?</p>
+      <p class="modal-subtext">This will notify emergency contacts and authorities.</p>
+      <div class="modal-actions">
+        <button class="btn-danger" id="confirmSosBtn">Confirm SOS</button>
+        <button class="btn-secondary" id="cancelSosBtn">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SUPPORT MODAL -->
+  <div class="modal" id="supportModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Contact Support</h3>
+        <button class="close-btn" id="closeSupportModalBtn">✕</button>
+      </div>
+      <form id="supportForm">
+        <div class="form-group">
+          <label>Issue Type</label>
+          <select class="input-field">
+            <option>Billing Issue</option>
+            <option>Driver Complaint</option>
+            <option>App Problem</option>
+            <option>Other</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Description</label>
+          <textarea class="input-field" rows="4" placeholder="Describe your issue..."></textarea>
+        </div>
+        <button type="submit" class="btn-primary">Submit</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+  <script type="module" src="../assets/js/dashboard.js"></script>
+  <script>
+    // Initialize analytics chart with example data. Replace with API data as needed.
+    document.addEventListener('DOMContentLoaded', function () {
+      const canvas = document.getElementById('analyticsChart');
+      if (!canvas) return;
+
+      const labels = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+      const data = {
+        labels: labels,
+        datasets: [{
+          label: 'Rides (last 7 days)',
+          data: [12, 19, 8, 15, 22, 10, 18],
+          fill: true,
+          backgroundColor: 'rgba(59,130,246,0.12)',
+          borderColor: 'rgba(59,130,246,1)',
+          tension: 0.3,
+          pointRadius: 4
+        }]
+      };
+
+      new Chart(canvas, {
+        type: 'line',
+        data: data,
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: true },
+            tooltip: { mode: 'index', intersect: false }
+          },
+          scales: {
+            x: { display: true },
+            y: { beginAtZero: true }
+          }
+        }
+      });
+    });
+  </script>
+</body>
+</html>
