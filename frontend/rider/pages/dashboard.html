@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RapidRide - Rider Dashboard</title>
+  <link rel="stylesheet" href="../assets/css/dashboard.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- Leaflet (OpenStreetMap) - free map -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <!-- Fallback if Leaflet fails to load -->
+  <script>
+    (function(){
+      function loaded(){ return typeof L !== 'undefined'; }
+      if (!loaded()) {
+        var s = document.createElement('script');
+        s.src = 'https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js';
+        s.onload = function(){ console.log('Leaflet fallback loaded from jsdelivr'); };
+        document.head.appendChild(s);
+      }
+    })();
+  </script>
+</head>
+<body>
+  <!-- 1. NAVBAR -->
+  <nav class="navbar">
+    <div class="nav-container">
+      <div class="nav-left">
+        <div class="logo-nav">
+          <span class="logo-icon">🚗</span>
+          <span class="logo-text">RapidRide</span>
+        </div>
+      </div>
+      <div class="nav-right">
+        <button class="nav-icon-btn" id="notificationBtn">
+          <span class="notification-badge" style="display: none;">0</span>
+          🔔
+        </button>
+        <div class="profile-dropdown">
+          <button class="profile-btn" id="profileBtn">
+            <div class="profile-avatar">U</div>
+            <span class="profile-name">Loading...</span>
+            <span class="dropdown-arrow">▼</span>
+          </button>
+          <div class="dropdown-menu" id="profileMenu">
+            <a href="#" class="dropdown-item" id="viewProfileBtn">
+              <span>👤</span> View Profile
+            </a>
+            <a href="#" class="dropdown-item" id="settingsBtn">
+              <span>⚙️</span> Settings
+            </a>
+            <a href="#" class="dropdown-item logout" id="logoutBtn">
+              <span>🚪</span> Logout
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- MAIN DASHBOARD -->
+  <div class="dashboard-wrapper">
+    
+    <!-- LEFT SIDEBAR -->
+    <aside class="sidebar-left" id="sidebarLeft">
+      
+      <!-- 4. RIDE REQUEST FORM -->
+      <div class="card ride-request-card">
+        <h3 class="card-title">Request a Ride</h3>
+        <form id="rideRequestForm">
+          <div class="form-group">
+            <label>Pickup Location</label>
+            <input type="text" id="pickupInput" placeholder="Enter pickup location" class="input-field">
+          </div>
+          <div class="form-group">
+            <label>Drop Location</label>
+            <input type="text" id="dropInput" placeholder="Enter destination" class="input-field">
+          </div>
+          <div class="form-group">
+            <label>Ride Type</label>
+            <select id="rideTypeSelect" class="input-field">
+              <option value="economy">Economy</option>
+              <option value="comfort">Comfort</option>
+              <option value="premium">Premium</option>
+              <option value="shared">Shared</option>
+            </select>
+          </div>
+          <div class="fare-estimate">
+            <span class="fare-label">Estimated Fare:</span>
+            <span class="fare-amount" id="fareAmount">Enter locations</span>
+          </div>
+          <button type="submit" class="btn-primary">
+            🚕 Request Ride
+          </button>
+        </form>
+      </div>
+
+      <!-- 10. REWARDS PANEL -->
+      <div class="card rewards-card">
+        <h3 class="card-title">Rewards & Coupons</h3>
+        <div class="reward-points">
+          <span class="points-icon">⭐</span>
+          <div class="points-info">
+            <span class="points-value" id="rewardPoints">0</span>
+            <span class="points-label">Points</span>
+          </div>
+        </div>
+        <div class="coupon-section">
+          <input type="text" id="couponInput" placeholder="Enter coupon code" class="input-field">
+          <button class="btn-secondary">Apply</button>
+        </div>
+      </div>
+
+      <!-- 9. PRE-BOOKINGS -->
+      <div class="card prebookings-card">
+        <h3 class="card-title">Scheduled Rides</h3>
+        <div class="prebooking-list" id="prebookingList">
+          <p class="empty-state" style="text-align: center; color: #999; padding: 20px;">No scheduled rides</p>
+        </div>
+        <button class="btn-secondary">📅 Schedule Ride</button>
+      </div>
+
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="main-content">
+      
+      <!-- 5. REAL-TIME STATUS BAR -->
+      <div class="status-bar" id="statusBar">
+        <div class="status-step active">
+          <div class="status-icon">🔍</div>
+          <span class="status-label">Searching</span>
+        </div>
+        <div class="status-line"></div>
+        <div class="status-step">
+          <div class="status-icon">✅</div>
+          <span class="status-label">Assigned</span>
+        </div>
+        <div class="status-line"></div>
+        <div class="status-step">
+          <div class="status-icon">🚗</div>
+          <span class="status-label">Arriving</span>
+        </div>
+        <div class="status-line"></div>
+        <div class="status-step">
+          <div class="status-icon">🛣️</div>
+          <span class="status-label">On Trip</span>
+        </div>
+        <div class="status-line"></div>
+        <div class="status-step">
+          <div class="status-icon">🏁</div>
+          <span class="status-label">Completed</span>
+        </div>
+      </div>
+
+      <!-- 2. LIVE MAP SECTION -->
+      <div class="card map-card">
+        <div id="mapContainer" class="map-container" style="height:360px;width:100%;"></div>
+      </div>
+
+      <!-- 3. CURRENT RIDE CARD -->
+      <div class="card current-ride-card" id="currentRideCard" style="display: none;">
+        <h3 class="card-title">Current Ride</h3>
+        <div class="ride-details">
+          <div class="driver-info">
+            <div class="driver-avatar" id="driverAvatar">--</div>
+            <div class="driver-text">
+              <p class="driver-name" id="driverName">Searching for driver...</p>
+              <p class="driver-rating" id="driverRating">⭐ -- • --</p>
+            </div>
+          </div>
+          <div class="ride-status">
+            <span class="status-badge arriving" id="rideStatus">Searching...</span>
+            <p class="eta-text">ETA: <span id="etaCountdown">--</span></p>
+          </div>
+          <button class="btn-cancel" id="cancelRideBtn">Cancel Ride</button>
+        </div>
+      </div>
+
+      <!-- 12. ANALYTICS SUMMARY -->
+      <div class="card analytics-card">
+        <h3 class="card-title">Analytics</h3>
+        <div class="chart-container" style="height:220px; padding:16px;">
+          <canvas id="analyticsChart"></canvas>
+        </div>
+      </div>
+
+      <!-- 11. RIDE HISTORY -->
+      <div class="card history-card">
+        <h3 class="card-title">Recent Rides</h3>
+        <div class="history-list" id="historyList">
+          <p class="empty-state" style="text-align: center; color: #999; padding: 20px;">No ride history yet</p>
+        </div>
+      </div>
+
+    </main>
+
+    <!-- RIGHT SIDEBAR -->
+    <aside class="sidebar-right" id="sidebarRight">
+      
+      <!-- 13. SUPPORT / HELP -->
+      <div class="card support-card">
+        <h3 class="card-title">Need Help?</h3>
+        <button class="btn-secondary" id="contactSupportBtn">💬 Contact Support</button>
+        <button class="btn-secondary" id="reportIssueBtn">⚠️ Report Issue</button>
+        <a href="#" class="link-text">❓ View FAQ</a>
+      </div>
+
+      <!-- 14. PROFILE INFO -->
+      <div class="card profile-card">
+        <h3 class="card-title">Profile</h3>
+        <div class="profile-info">
+          <div class="profile-avatar-large" id="profileAvatarLarge">U</div>
+          <p class="profile-name-large" id="profileNameLarge">Loading...</p>
+          <p class="profile-phone" id="profilePhone">--</p>
+          <button class="btn-secondary" id="editProfileBtn">✏️ Edit Profile</button>
+        </div>
+      </div>
+
+    </aside>
+
+  </div>
+
+  <!-- 6. NOTIFICATIONS PANEL (Slide-out) -->
+  <div class="notification-panel" id="notificationPanel">
+    <div class="panel-header">
+      <h3>Notifications</h3>
+      <button class="close-btn" id="closeNotificationBtn">✕</button>
+    </div>
+    <div class="notification-list" id="notificationList">
+      <p class="empty-state" style="text-align: center; color: #999; padding: 20px;">No notifications</p>
+    </div>
+  </div>
+
+  <!-- 7. EMERGENCY SOS BUTTON -->
+  <button class="sos-button" id="sosButton">
+    <span class="sos-icon">🆘</span>
+  </button>
+
+  <!-- 8. ROUTE DEVIATION ALERT MODAL -->
+  <div class="modal" id="deviationModal">
+    <div class="modal-content warning-modal">
+      <h3>⚠️ Route Deviation Detected</h3>
+      <p>Your driver has deviated from the planned route.</p>
+      <div class="modal-actions">
+        <button class="btn-primary" id="contactDriverBtn">Contact Driver</button>
+        <button class="btn-secondary" id="closeDeviationBtn">Dismiss</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SOS CONFIRMATION MODAL -->
+  <div class="modal" id="sosModal">
+    <div class="modal-content emergency-modal">
+      <h3>🆘 Emergency SOS</h3>
+      <p>Are you sure you want to trigger an emergency alert?</p>
+      <p class="modal-subtext">This will notify emergency contacts and authorities.</p>
+      <div class="modal-actions">
+        <button class="btn-danger" id="confirmSosBtn">Confirm SOS</button>
+        <button class="btn-secondary" id="cancelSosBtn">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SUPPORT MODAL -->
+  <div class="modal" id="supportModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Contact Support</h3>
+        <button class="close-btn" id="closeSupportModalBtn">✕</button>
+      </div>
+      <form id="supportForm">
+        <div class="form-group">
+          <label>Issue Type</label>
+          <select class="input-field">
+            <option>Billing Issue</option>
+            <option>Driver Complaint</option>
+            <option>App Problem</option>
+            <option>Other</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Description</label>
+          <textarea class="input-field" rows="4" placeholder="Describe your issue..."></textarea>
+        </div>
+        <button type="submit" class="btn-primary">Submit</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- SETTINGS MODAL (Theme + Map style) -->
+  <div class="modal" id="settingsModal">
+    <div class="modal-content settings-modal">
+      <div class="modal-header">
+        <h3>Settings</h3>
+        <button class="close-btn" id="closeSettingsModalBtn">✕</button>
+      </div>
+
+      <div class="settings-section">
+        <h4>Map Style</h4>
+        <div class="settings-buttons">
+          <button class="btn-secondary" data-map-style="light">Light</button>
+          <button class="btn-secondary" data-map-style="dark">Dark</button>
+          <button class="btn-secondary" data-map-style="terrain">Terrain</button>
+          <button class="btn-secondary" data-map-style="satellite">Satellite</button>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <h4>Theme</h4>
+        <div class="settings-buttons">
+          <button class="btn-secondary" data-theme="light">Light</button>
+          <button class="btn-secondary" data-theme="dark">Dark</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+  <script type="module" src="../assets/js/dashboard.js"></script>
+</body>
+</html>
