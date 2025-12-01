@@ -1,4 +1,4 @@
-const url = location.origin;
+const url = "http://localhost:5500"
 async function login() {
   const email = document.getElementById("email").value;
   const password = document.getElementById("password").value;
@@ -16,35 +16,12 @@ async function login() {
       body: JSON.stringify({ email, password, role })
     });
 
-    // Debug: log status and raw response before parsing
-    console.log('Login response status:', res.status, res.statusText);
-    const raw = await res.text();
-    console.log('Login raw response:', raw);
-
-    let data;
-    try {
-      data = raw ? JSON.parse(raw) : {};
-    } catch (err) {
-      console.error('Failed to parse login response as JSON:', err);
-      alert('Server returned invalid response. Check server logs.');
-      return;
-    }
+    const data = await res.json();
 
     if (data.success) {
       localStorage.setItem("token", data.token);
       alert("Login successful!");
-      
-      // Redirect based on role
-      if (role === 'driver') {
-        window.location.href = `${location.origin}/driver/pages/dashboard.html`;
-      } else if (role === 'rider') {
-        window.location.href = `${location.origin}/rider/pages/dashboard.html`;
-      } else if (role === 'admin') {
-        window.location.href = `${location.origin}/admin/pages/dashboard.html`;
-      } else {
-        // Default to rider dashboard
-        window.location.href = `${location.origin}/rider/pages/dashboard.html`;
-      }
+      window.location.href = "dashboard.html";
     } else {
       alert(data.message || "Login failed");
     }
